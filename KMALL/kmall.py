@@ -32,10 +32,10 @@ class kmall():
 
         self.pingDataCheck = None
         self.navDataCheck = None
-        
+
         self.datagram_ident_search = self._build_startbytesearch()
         self.read_methods = [method_name for method_name in dir(self) if method_name[0:4] == 'read']
-        
+
         self.datagram_ident = None
         self.datagram_data = None
         self.read_method = None
@@ -44,7 +44,7 @@ class kmall():
     def decode_datagram(self):
         """
         Assumes the file pointer is at the correct position to read the size of the dgram and the identifier
-        
+
         Stores the datagram identifier and the read method as attributes.  read method is the name of the class
         method that we would use to read the datagram
         """
@@ -73,20 +73,20 @@ class kmall():
                 raise ValueError('Did not find valid datagram identifier: {}'.format(dgram))
         else:
             self.eof = True
-    
+
     def read_datagram(self):
         """
         Reads the datagram data and stores the data in self.datagram_data
         Will always translate the installation parameters record (translate=True)
-        
+
         To get the first record:
-        
+
         km = kmall.kmall(r"C:\\Users\\zzzz\\Downloads\\0007_20190513_154724_ASVBEN.kmall")
         km.decode_datagram()
         km.read_datagram()
-        
+
         Or to get the first MRZ record:
-        
+
         km = kmall.kmall(r"C:\\Users\\zzzz\\Downloads\\0007_20190513_154724_ASVBEN.kmall")
         while not km.eof:
             km.decode_datagram()
@@ -95,7 +95,7 @@ class kmall():
             else:
                 km.read_datagram()
                 break
-        
+
         """
         if self.read_method is not None:  # is None when decode fails or is at the end of file
             if self.read_method in ['read_EMdgmIIP', 'read_EMdgmIOP']:
@@ -120,7 +120,7 @@ class kmall():
         """
         self.datagram_data = None
         self.eof = False
-        
+
         if self.FID is None:
             self.OpenFiletoRead()
         else:
@@ -136,6 +136,128 @@ class kmall():
         if self.datagram_data is None:
             print('Unable to find {} in file'.format(datagram_identifier))
         return self.datagram_data
+
+    # Datagram should be a row from the Index
+    def read_index_row( self, datagram, header_only=False, rewind=False ):
+        '''
+        /*********************************************
+        274             Datagram names
+        275  *********************************************/
+        276
+        277 /* I  datagrams */
+        278 #define EM_DGM_I_INSTALLATION_PARAM    "#IIP"
+        279 #define EM_DGM_I_OP_RUNTIME            "#IOP"
+        280
+        281 /* Sdatagrams */
+        282 #define EM_DGM_S_POSITION               "#SPO"
+        283 #define EM_DGM_S_KM_BINARY              "#SKM"
+        284 #define EM_DGM_S_SOUND_VELOCITY_PROFILE "#SVP"
+        285 #define EM_DGM_S_CLOCK                  "#SCL"
+        286 #define EM_DGM_S_DEPTH                  "#SDE"
+        287 #define EM_DGM_S_HEIGHT                 "#SHI"
+        288 #define EM_DGM_S_HEADING                "#SHA"
+        289
+        290 /* Mdatagrams */
+        291 #define EM_DGM_M_RANGE_AND_DEPTH        "#MRZ"
+        292 #define EM_DGM_M_WATER_COLUMN           "#MWC"
+
+        Possible strategy for reading from a stream:
+             Read data into buffer
+             Search for all of these datagram types.
+             seek to first one minus 4 bytes for packet size.
+             Read packet size.
+             Check to see if packet is wholly contained within buffer.
+             IF not, increase size of buffer.
+             Read header
+             Read rest of packet.
+        '''
+
+        self.FID.seek(datagram.ByteOffset,0)
+
+        out = None
+
+        if header_only:
+            out = { 'header': self.read_EMdgmHeader() }
+
+        # === IDatagrams ===
+        elif datagram.MessageType == "#IIP":
+            out = self.read_EMdgmIIP()
+
+        elif datagram.MessageType == "#IOP":
+            out = self.read_EMdgmIOP()
+
+        # === MDatagrams ===
+        elif datagram.MessageType == "#MWC":
+            out = self.read_EMdgmMWC()
+
+        elif datagram.MessageType == "#MRZ":
+            out = self.read_EMdgmMRZ()
+
+        # === SDatagrams ===
+        elif datagram.MessageType == "#SPO":
+            out = self.read_EMdgmSPO()
+
+        elif datagram.MessageType == "#SKM":
+            out = self.read_EMdgmSKM()
+
+        elif datagram.MessageType == "#SVP":
+            out = self.read_EMdgmSVP()
+
+        elif datagram.MessageType == "#SVT":
+            out = self.read_EMdgmSVT()
+
+        elif datagram.MessageType == "#SCL":
+            out = self.read_EMdgmSCL()
+
+        elif datagram.MessageType == "#SDE":
+            out = self.read_EMdgmSDE()
+
+        elif datagram.MessageType == "#SHI":
+            out = self.read_EMdgmSHI()
+
+        elif datagram.MessageType == "#SHA":
+            out = self.read_EMdgmSHA()
+
+        elif datagram.MessageType == "#CHE":
+            out = self.read_EMdgmCHE()
+
+        elif datagram.MessageType == "#CPO":
+            out = self.read_EMdgmCPO()
+
+        if rewind:
+            self.FID.seek(datagram.ByteOffset,0)
+
+        return out
+
+    def validateTrailingPacketSize(self, dg, start):
+        """
+        Kmall packets start with a header, and _end_ with a repeat of the
+        4-byte packet size.  Checking for that packet size value can be
+        used to validate that the entire packet has been parsed correctly.
+
+        This function performs two tests:
+         1. That the current self.FID is 4 bytes before the end of datagram dg
+         2. It then reads those four bytes and compares them to the actual
+            datagram lengths.
+
+        :return:  False if either test fails.
+        """
+        expected = dg['header']['numBytesDgm'] + start - 4
+        actual = self.FID.tell()
+
+        if actual != expected:
+            print("While checking trailing packet size, expect to be at %d, actually at %d" % (expected, actual) )
+            return False
+
+        # Validate length at end of packet
+        fields = struct.unpack("1I", self.FID.read(4))
+        dgm_end_length = fields[0]
+        if dgm_end_length != dg['header']['numBytesDgm']:
+            print("Packet %s at offset %d, trailing packet size doesn't match header (%d != %d)"
+                            % (dg['header']['dgmType'], start, dg['header']['numBytesDgm'], dgm_end_length) )
+            return False
+
+        return true
 
     def read_EMdgmHeader(self):
         """
@@ -153,7 +275,7 @@ class kmall():
         # of the datagram (4 bytes) are included in the length count.
         dg['numBytesDgm'] = fields[0]
         # Array of length 4. Multibeam datagram type definition, e.g. #AAA
-        dg['dgmType'] = fields[1]
+        dg['dgmType'] = fields[1].decode("ascii")
         # Datagram version.
         dg['dgmVersion'] = fields[2]
         # System ID. Parameter used for separating datagrams from different echosounders
@@ -242,7 +364,7 @@ class kmall():
         if translate:
             rt_text = self.translate_runtime_parameters_todict(rt_text)
         dg['runtime_txt'] = rt_text
-        
+
         # remainder = total bytes - (header bytes + data bytes)
         expected_unknown_size = dg['header']['numBytesDgm'] - (self.header_size + dg['numBytesCmnPart'])
 
@@ -1010,14 +1132,14 @@ class kmall():
         # TODO: Test with water column data, phaseFlag = 1 to complete/test this function.
         # print("WARNING: You are using an incomplete, untested function: read_EMdgmMWCrxBeamPhase1.")
 
-        dg = {}
+        #dg = {}
         format_to_unpack = str(numSampleData) + "b"
         fields = struct.unpack(format_to_unpack, self.FID.read(struct.Struct(format_to_unpack).size))
 
         # Rx beam phase in 180/128 degree resolution.
-        dg['rxBeamPhase'] = fields
+        #dg['rxBeamPhase'] = fields
 
-        return dg
+        return fields
 
     def read_EMdgmMWCrxBeamPhase2(self, numSampleData):
         """
@@ -1030,14 +1152,14 @@ class kmall():
         # TODO: Test with water column data, phaseFlag = 2 to complete/test this function.
         # print("WARNING: You are using an incomplete, untested function: read_EMdgmMWCrxBeamPhase2.")
 
-        dg = {}
+        #dg = {}
         format_to_unpack = str(numSampleData) + "h"
         fields = struct.unpack(format_to_unpack, self.FID.read(struct.Struct(format_to_unpack).size))
 
         # Rx beam phase in 0.01 degree resolution.
-        dg['rxBeamPhase'] = fields
+        #dg['rxBeamPhase'] = fields
 
-        return dg
+        return fields
 
     def read_EMdgmMWC(self):
         """
@@ -1070,7 +1192,7 @@ class kmall():
         # EMdgmMWCrxBeamPhase2_def (int16_t) if indicated in the field phaseFlag in struct EMdgmMWCrxInfo_def.
         # Length of data block for each beam depends on the operators choice of phase information (see table):
         '''
-                phaseFlag:      Beam Block Size: 
+                phaseFlag:      Beam Block Size:
                 0               numBytesPerBeamEntry + numSampleData * size(sampleAmplitude05dB_p)
                 1               numBytesPerBeamEntry + numSampleData * size(sampleAmplitude05dB_p)
                                     + numSampleData * size(EMdgmMWCrxBeamPhase1_def)
@@ -1081,30 +1203,39 @@ class kmall():
         rxBeamData = []
         rxPhaseInfo = []
         for idx in range(dg['rxInfo']['numBeams']):
-            rxBeamData.append(self.read_EMdgmMWCrxBeamData())
+            #rxBeamData.append(self.read_EMdgmMWCrxBeamData())
+            mwc_dg = self.read_EMdgmMWCrxBeamData()
 
             if dg['rxInfo']['phaseFlag'] == 0:
                 pass
 
             elif dg['rxInfo']['phaseFlag'] == 1:
                 # TODO: Test with water column data, phaseFlag = 1 to complete/test this function.
-                rxPhaseInfo.append(self.read_EMdgmMWCrxBeamPhase1(rxBeamData[idx]['numSampleData']))
+                #rxPhaseInfo.append(self.read_EMdgmMWCrxBeamPhase1(rxBeamData[idx]['numSampleData']))
+                phase_data = self.read_EMdgmMWCrxBeamPhase1(mwc_dg['numSampleData'])
+                mwc_dg['rxBeamPhase_deg'] = tuple([i*180/128 for i in phase_data])
 
             elif dg['rxInfo']['phaseFlag'] == 2:
                 # TODO: Test with water column data, phaseFlag = 2 to complete/test this function.
-                rxPhaseInfo.append(self.read_EMdgmMWCrxBeamPhase2(rxBeamData[idx]['numSampleData']))
+                #rxPhaseInfo.append(self.read_EMdgmMWCrxBeamPhase2(rxBeamData[idx]['numSampleData']))
+                phase_data = self.read_EMdgmMWCrxBeamPhase2(mwc_dg['numSampleData'])
+                mwc_dg['rxBeamPhase_deg'] = tuple([i*0.01 for i in phase_data])
 
             else:
                 print("ERROR: phaseFlag error in read_EMdgmMWC function.")
 
+            rxBeamData.append( mwc_dg )
+
         dg['beamData'] = self.listofdicts2dictoflists(rxBeamData)
+
+        self.validateTrailingPacketSize( dg, start )
 
         # TODO: Should this be handled in a different way? By this method, number of fields in dg is variable.
         if dg['rxInfo']['phaseFlag'] == 1 or dg['rxInfo']['phaseFlag'] == 2:
             dg['phaseInfo'] = self.listofdicts2dictoflists(rxPhaseInfo)
 
         # Seek to end of the packet.
-        self.FID.seek(start + dg['header']['numBytesDgm'], 0)
+        #self.FID.seek(start + dg['header']['numBytesDgm'], 0)
 
         return dg
 
@@ -1126,7 +1257,7 @@ class kmall():
         # position system 0 refers to system POSI_1 in installation datagram #IIP. Check if this sensor system is
         # active by using #IIP datagram. #SCL - clock datagram:
         '''
-                Bit:    Sensor system: 
+                Bit:    Sensor system:
                 0       Time syncronisation from clock data
                 1       Time syncronisation from active position data
                 2       1 PPS is used
@@ -1136,11 +1267,11 @@ class kmall():
         # is active and the PU receives data. Bit code vary according to type of sensor.
         # Bits 0 -7 common to all sensors and #MRZ sensor status:
         '''
-                Bit:    Sensor data: 
-                0       0 = Data OK; 1 = Data OK and sensor is chosen as active; 
+                Bit:    Sensor data:
+                0       0 = Data OK; 1 = Data OK and sensor is chosen as active;
                         #SCL only: 1 = Valid data and 1PPS OK
                 1       0
-                2       0 = Data OK; 1 = Reduced performance; 
+                2       0 = Data OK; 1 = Reduced performance;
                         #SCL only: 1 = Reduced performance, no time synchronisation of PU
                 3       0
                 4       0 = Data OK; 1 = Invalid data
@@ -1150,7 +1281,7 @@ class kmall():
         '''
         # For #SPO (position) and CPO (position compatibility) datagrams, bit 8 - 15:
         '''
-                Bit:    Sensor data: 
+                Bit:    Sensor data:
                 8       0
                 9       0 = Time from PU used (system); 1 = Time from datagram used (e.g. from GGA telegram)
                 10      0 = No motion correction; 1 = With motion correction
@@ -1281,7 +1412,7 @@ class kmall():
         dg['sensorStatus'] = fields[2]
         # Format of raw data from input sensor, given in numerical code according to table below.
         '''
-                Code:   Sensor Format: 
+                Code:   Sensor Format:
                 1:      KM Binary Sensor Format
                 2:      EM 3000 data
                 3:      Sagem
@@ -1385,10 +1516,10 @@ class kmall():
         # Bit number 0-7 indicate if from a sensor data is invalid: 0 = valid data, 1 = invalid data.
         # Bit number 16-> indicate if data from sensor has reduced performance: 0 = valid data, 1 = reduced performance.
         '''
-                Invalid data:                               |       Reduced performance: 
-                Bit:    Sensor data:                        |       Bit:    Sensor data: 
+                Invalid data:                               |       Reduced performance:
+                Bit:    Sensor data:                        |       Bit:    Sensor data:
                 0       Horizontal position and velocity    |       16      Horizontal position and velocity
-                1       Roll and pitch                      |       17      Roll and pitch 
+                1       Roll and pitch                      |       17      Roll and pitch
                 2       Heading                             |       18      Heading
                 3       Heave and vertical velocity         |       19      Heave and vertical velocity
                 4       Acceleration                        |       20      Acceleration
@@ -1604,19 +1735,19 @@ class kmall():
         # is active and the PU receives data. Bit code vary according to type of sensor.
         # Bits 0-7 common to all sensors and #MRZ sensor status:
         '''
-                Bit:   Sensor data: 
+                Bit:   Sensor data:
                 0      0 Data OK; 1 Data OK and sensor chosen is active
                 1      0
                 2      0 Data OK; 1 Reduced Performance
                 3      0
                 4      0 Data OK; 1 Invalid Data
                 5      0
-                6      0 
+                6      0
         '''
         dg['sensorStatus'] = fields[1]
         # Format of raw data from input sensor, given in numerical code according to table below.
         '''
-                Code:   Sensor format: 
+                Code:   Sensor format:
                 1       AML NMEA
                 2       AML SV
                 3       AML SVT
@@ -1637,7 +1768,7 @@ class kmall():
         # 0 = not available; 1 = data is available
         # Expected data field in sensor input:
         '''
-                Bit:    Sensor data: 
+                Bit:    Sensor data:
                 0       Sound Velocity
                 1       Temperature
                 2       Pressure
