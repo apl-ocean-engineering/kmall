@@ -3383,7 +3383,7 @@ class kmall():
                     d_of_l[nf] = [item for sublist in d_of_l[nf] for item in sublist]
             return d_of_l
         else:
-            return None
+            return {}
 
     def extract_xyz(self):
         pass
