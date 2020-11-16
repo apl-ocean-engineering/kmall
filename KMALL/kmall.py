@@ -257,7 +257,7 @@ class kmall():
                             % (dg['header']['dgmType'], start, dg['header']['numBytesDgm'], dgm_end_length) )
             return False
 
-        return true
+        return True
 
     def read_EMdgmHeader(self):
         """

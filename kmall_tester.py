@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import kmall
+import KMALL
 
 # 2019 Thunder Bay - With Water Column
 #file = 'data/0019_20190511_204630_ASVBEN.kmall'
@@ -22,7 +22,7 @@ for item in os.listdir(path):
     print('File: ', item)
 
     file = path + '/' + item
-    k = kmall.kmall(file)
+    k = KMALL.kmall(file)
     k.OpenFiletoRead()
     k.index_file()
 
@@ -80,7 +80,7 @@ for item in os.listdir(path):
         k.FID.seek(offset, 0)
         dg_MRZ = k.read_EMdgmMRZ()
         #print(dg_MRZ)
-    
+
     # Get the file byte count offset for each MWC datagram.
     MWCOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#MWC'"]
     print("Num MWC Offsets: ", len(MWCOffsets))
@@ -88,7 +88,7 @@ for item in os.listdir(path):
         k.FID.seek(offset, 0)
         dg_MWC = k.read_EMdgmMWC()
         #print(dg_MWC)
-    
+
     # Get the file byte count offset for each SPO datagram.
     SPOOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SPO'"]
     print("Num SPO Offsets: ", len(SPOOffsets))
