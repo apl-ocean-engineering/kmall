@@ -180,49 +180,52 @@ class kmall():
             out = { 'header': self.read_EMdgmHeader() }
 
         # === IDatagrams ===
-        elif datagram.MessageType == "#IIP":
+        elif datagram.MessageType == b'#IIP':
             out = self.read_EMdgmIIP()
 
-        elif datagram.MessageType == "#IOP":
+        elif datagram.MessageType == b'#IOP':
             out = self.read_EMdgmIOP()
 
         # === MDatagrams ===
-        elif datagram.MessageType == "#MWC":
+        elif datagram.MessageType == b'#MWC':
             out = self.read_EMdgmMWC()
 
-        elif datagram.MessageType == "#MRZ":
+        elif datagram.MessageType == b'#MRZ':
             out = self.read_EMdgmMRZ()
 
         # === SDatagrams ===
-        elif datagram.MessageType == "#SPO":
+        elif datagram.MessageType == b'#SPO':
             out = self.read_EMdgmSPO()
 
-        elif datagram.MessageType == "#SKM":
+        elif datagram.MessageType == b'#SKM':
             out = self.read_EMdgmSKM()
 
-        elif datagram.MessageType == "#SVP":
+        elif datagram.MessageType == b'#SVP':
             out = self.read_EMdgmSVP()
 
-        elif datagram.MessageType == "#SVT":
+        elif datagram.MessageType == b'#SVT':
             out = self.read_EMdgmSVT()
 
-        elif datagram.MessageType == "#SCL":
+        elif datagram.MessageType == b'#SCL':
             out = self.read_EMdgmSCL()
 
-        elif datagram.MessageType == "#SDE":
+        elif datagram.MessageType == b'#SDE':
             out = self.read_EMdgmSDE()
 
-        elif datagram.MessageType == "#SHI":
+        elif datagram.MessageType == b'#SHI':
             out = self.read_EMdgmSHI()
 
-        elif datagram.MessageType == "#SHA":
+        elif datagram.MessageType == b'#SHA':
             out = self.read_EMdgmSHA()
 
-        elif datagram.MessageType == "#CHE":
+        elif datagram.MessageType == b'#CHE':
             out = self.read_EMdgmCHE()
 
-        elif datagram.MessageType == "#CPO":
+        elif datagram.MessageType == b'#CPO':
             out = self.read_EMdgmCPO()
+
+        else:
+            print("Couldn't parse datagram of type: ", datagram.MessageType)
 
         if rewind:
             self.FID.seek(datagram.ByteOffset,0)
@@ -275,7 +278,7 @@ class kmall():
         # of the datagram (4 bytes) are included in the length count.
         dg['numBytesDgm'] = fields[0]
         # Array of length 4. Multibeam datagram type definition, e.g. #AAA
-        dg['dgmType'] = fields[1].decode("ascii")
+        dg['dgmType'] = fields[1]
         # Datagram version.
         dg['dgmVersion'] = fields[2]
         # System ID. Parameter used for separating datagrams from different echosounders
@@ -3285,7 +3288,7 @@ class kmall():
 
             dgm_type = dgm_type0 + dgm_type1 + dgm_type2 + dgm_type3
 
-            self.msgtype.append(str(dgm_type))
+            self.msgtype.append(dgm_type)
             # Decode time
             # osec = sec
             # osec *= 1E9
