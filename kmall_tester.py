@@ -34,7 +34,7 @@ for item in os.listdir(path):
     #print(pingCount)
 
     # Get the file byte count offset for each IIP datagram.
-    IIPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#IIP'"]
+    IIPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#IIP']
     print("Num IIP Offsets: ", len(IIPOffsets))
     for offset in IIPOffsets:
         k.FID.seek(offset, 0)
@@ -42,7 +42,7 @@ for item in os.listdir(path):
         #print(dg_IIP)
 
     # Get the file byte count offset for each IOP datagram.
-    IOPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#IOP'"]
+    IOPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#IOP']
     print("Num IOP Offsets: ", len(IOPOffsets))
     for offset in IOPOffsets:
         k.FID.seek(offset, 0)
@@ -50,7 +50,7 @@ for item in os.listdir(path):
         #print(dg_IOP)
 
     # Get the file byte count offset for each IBE datagram.
-    IBEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#IBE'"]
+    IBEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#IBE']
     print("Num IBE Offsets: ", len(IBEOffsets))
     for offset in IBEOffsets:
         k.FID.seek(offset, 0)
@@ -58,7 +58,7 @@ for item in os.listdir(path):
         #print(dg_IBE)
 
     # Get the file byte count offset for each IBR datagram.
-    IBROffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#IBR'"]
+    IBROffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#IBR']
     print("Num IBR Offsets: ", len(IBROffsets))
     for offset in IBROffsets:
         k.FID.seek(offset, 0)
@@ -66,7 +66,7 @@ for item in os.listdir(path):
         #print(dg_IBR)
 
     # Get the file byte count offset for each IBS datagram.
-    IBSOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#IBS'"]
+    IBSOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#IBS']
     print("Num IBS Offsets: ", len(IBSOffsets))
     for offset in IBSOffsets:
         k.FID.seek(offset, 0)
@@ -74,7 +74,7 @@ for item in os.listdir(path):
         #print(dg_IBS)
 
     # Get the file byte count offset for each MRZ datagram.
-    MRZOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#MRZ'"]
+    MRZOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#MRZ']
     print("Num MRZ Offsets: ", len(MRZOffsets))
     for offset in MRZOffsets:
         k.FID.seek(offset, 0)
@@ -82,7 +82,7 @@ for item in os.listdir(path):
         #print(dg_MRZ)
 
     # Get the file byte count offset for each MWC datagram.
-    MWCOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#MWC'"]
+    MWCOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#MWC']
     print("Num MWC Offsets: ", len(MWCOffsets))
     for offset in MWCOffsets:
         k.FID.seek(offset, 0)
@@ -90,7 +90,7 @@ for item in os.listdir(path):
         #print(dg_MWC)
 
     # Get the file byte count offset for each SPO datagram.
-    SPOOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SPO'"]
+    SPOOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SPO']
     print("Num SPO Offsets: ", len(SPOOffsets))
     for offset in SPOOffsets:
         k.FID.seek(offset, 0)
@@ -98,7 +98,7 @@ for item in os.listdir(path):
         #print(dg_SPO)
 
     # Get the file byte count offset for each SKM datagram.
-    SKMOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SKM'"]
+    SKMOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SKM']
     print("Num SKM Offsets: ", len(SKMOffsets))
     for offset in SKMOffsets:
         k.FID.seek(offset, 0)
@@ -106,7 +106,7 @@ for item in os.listdir(path):
         #print(dg_SKM)
 
     # Get the file byte count offset for each SVP datagram.
-    SVPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SVP'"]
+    SVPOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SVP']
     print("Num SVP Offsets: ", len(SVPOffsets))
     for offset in SVPOffsets:
         k.FID.seek(offset, 0)
@@ -114,7 +114,7 @@ for item in os.listdir(path):
         #print(dg_SVP)
 
     # Get the file byte count offset for each SVT datagram.
-    SVTOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SVT'"]
+    SVTOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SVT']
     print("Num SVT Offsets: ", len(SVTOffsets))
     for offset in SVTOffsets:
         k.FID.seek(offset, 0)
@@ -122,7 +122,7 @@ for item in os.listdir(path):
         #print(dg_SVT)
 
     # Get the file byte count offset for each SCL datagram.
-    SCLOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SCL'"]
+    SCLOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SCL']
     print("Num SCL Offsets: ", len(SCLOffsets))
     for offset in SCLOffsets:
         k.FID.seek(offset, 0)
@@ -130,7 +130,7 @@ for item in os.listdir(path):
         #print(dg_SCL)
 
     # Get the file byte count offset for each SDE datagram.
-    SDEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SDE'"]
+    SDEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SDE']
     print("Num SDE Offsets: ", len(SDEOffsets))
     for offset in SDEOffsets:
         k.FID.seek(offset, 0)
@@ -138,7 +138,7 @@ for item in os.listdir(path):
         #print(dg_SCL)
 
     # Get the file byte count offset for each SHI datagram.
-    SHIOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#SHI'"]
+    SHIOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#SHI']
     print("Num SHI Offsets: ", len(SHIOffsets))
     for offset in SDEOffsets:
         k.FID.seek(offset, 0)
@@ -146,7 +146,7 @@ for item in os.listdir(path):
         #print(dg_SHI)
 
     # Get the file byte count offset for each CPO datagram.
-    CPOOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#CPO'"]
+    CPOOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#CPO']
     print("Num CPO Offsets: ", len(CPOOffsets))
     for offset in CPOOffsets:
         k.FID.seek(offset, 0)
@@ -154,7 +154,7 @@ for item in os.listdir(path):
         #print(dg_CPO)
 
     # Get the file byte count offset for each CHE datagram.
-    CHEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == "b'#CHE'"]
+    CHEOffsets = [x for x, y in zip(k.msgoffset, k.msgtype) if y == b'#CHE']
     print("Num CHE Offsets: ", len(CHEOffsets))
     for offset in CHEOffsets:
         k.FID.seek(offset, 0)
