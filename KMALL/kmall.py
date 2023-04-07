@@ -3323,7 +3323,7 @@ class kmall():
 
             dgm_type = dgm_type0 + dgm_type1 + dgm_type2 + dgm_type3
 
-            self.msgtype.append(str(dgm_type))
+            self.msgtype.append(dgm_type.decode())
             # Decode time
             # osec = sec
             # osec *= 1E9
