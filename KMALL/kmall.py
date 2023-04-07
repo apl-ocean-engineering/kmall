@@ -3459,7 +3459,7 @@ class kmall():
             return d_of_l
             
         else:
-            return None
+            return {}
     
 
     def extractLonLatZ(self):
@@ -4148,7 +4148,7 @@ class kmall():
                         'Yaw Stabilisation Heading Filter')
                     translatedvalues.insert(
                         translatedkeys.index('Yaw Stabilisation Mode')+1,
-                        None)
+                        '')
             translated = dict(zip(translatedkeys,translatedvalues))
 
 
