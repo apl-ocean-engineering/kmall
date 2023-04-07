@@ -4194,6 +4194,7 @@ class kmall():
                             'ISY=': '_starboard_sector_starboard', 'ISZ=': '_starboard_sector_down',
                             'ITX=': '_tx_forward', 'ITY=': '_tx_starboard', 'ITZ=': '_tx_down',
                             'IRX=': '_rx_forward', 'IRY=': '_rx_starboard', 'IRZ=': '_rx_down', 'D=': '_time_delay',
+                            'IX=': '_unknown_forward', 'IY=': '_unknown_starboard', 'IZ=': '_unknown_down',
                             'G=': '_datum', 'T=': '_time_stamp', 'C=': '_motion_compensation', 'F=': '_data_format',
                             'Q=': '_quality_check', 'I=': '_input_source', 'U=': '_active_passive',
                             'M=': 'motion_reference', 'A=': '_1pps'}
@@ -4207,6 +4208,12 @@ class kmall():
         translated = {}
         translate = translate_install
         for rec in records_flatten:
+
+            # Catch an corner case there the TX serial number contain a semicolon 
+            # and get split above
+            if rec[0].startswith('TX'):
+                rec = [';'.join(rec)]
+
             # subgroups are parsed here, first rec contains the prefix
             # ex: ['ATTI_1:X=0.000', 'Y=0.000', 'Z=0.000', 'R=0.000', 'P=0.000', 'H=0.000', 'D=0.000'...
             if len(rec) > 1:
