@@ -55,3 +55,7 @@ build/*
 #########################
 *.ipynb_checkpoints/*
 
+# Distribution / packaging
+##########################
+*.egg-info/
+
