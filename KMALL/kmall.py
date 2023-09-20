@@ -182,6 +182,26 @@ class kmall():
             print('Unable to find {} in file'.format(datagram_identifier))
         return self.datagram_data
 
+
+    # Datagram should be a row from the Index
+    def read_index_row( self, datagram, header_only=False, rewind=False ):
+        if self.FID is None:
+            self.OpenFiletoRead()
+
+        current_pos = self.FID.tell()
+
+        self.FID.seek(datagram.ByteOffset,0)
+
+        self.decode_datagram()
+
+        if not header_only:
+            self.read_datagram()
+
+        if rewind:
+            self.FID.seek(current_pos,0)
+
+        return self.datagram_data
+
     ###########################################################
     # Reading datagrams
     ###########################################################
@@ -1045,7 +1065,11 @@ class kmall():
         # TODO: Test with water column data, phaseFlag = 1 and phaseFlag = 2 to ensure this continues to function properly.
 
         dg = {}
-        format_to_unpack = "1f4H"
+
+        # The "detectedRangeInSamplesHighResolution" field is present in my dgmVersion==2
+        # data.  Given it wasn't implemented in the upstream library, wonder if
+        # it wasn't present in dgmVersion==1?
+        format_to_unpack = "1f4H1f"
         fields = struct.unpack(format_to_unpack, self.FID.read(struct.Struct(format_to_unpack).size))
 
         dg['beamPointAngReVertical_deg'] = fields[0]
@@ -1057,6 +1081,13 @@ class kmall():
         dg['beamTxSectorNum'] = fields[3]
         # Number of sample data for current beam. Also denoted Ns.
         dg['numSampleData'] = fields[4]
+
+        # The same information as in detectedRangeInSamples with higher
+        # resolution. Two way range in samples. Approximation to calculated
+        # distance from tx to bottom detection
+        # [meters] = soundVelocity_mPerSec * detectedRangeInSamples / (sampleFreq_Hz * 2)
+        # The detected range is set to zero when the beam has no bottom detection.
+        dg['detectedRangeInSamplesHighResolution'] = fields[5]
 
         # Pointer to start of array with Water Column data. Length of array = numSampleData.
         # Sample amplitudes in 0.5 dB resolution. Size of array is numSampleData * int8_t.
@@ -3303,7 +3334,7 @@ class kmall():
 
             dgm_type = dgm_type0 + dgm_type1 + dgm_type2 + dgm_type3
 
-            self.msgtype.append(str(dgm_type))
+            self.msgtype.append(dgm_type.decode())
             # Decode time
             # osec = sec
             # osec *= 1E9
@@ -3439,7 +3470,7 @@ class kmall():
             return d_of_l
             
         else:
-            return None
+            return {}
     
 
     def extractLonLatZ(self):
@@ -4128,7 +4159,7 @@ class kmall():
                         'Yaw Stabilisation Heading Filter')
                     translatedvalues.insert(
                         translatedkeys.index('Yaw Stabilisation Mode')+1,
-                        None)
+                        '')
             translated = dict(zip(translatedkeys,translatedvalues))
 
 
@@ -4174,6 +4205,7 @@ class kmall():
                             'ISY=': '_starboard_sector_starboard', 'ISZ=': '_starboard_sector_down',
                             'ITX=': '_tx_forward', 'ITY=': '_tx_starboard', 'ITZ=': '_tx_down',
                             'IRX=': '_rx_forward', 'IRY=': '_rx_starboard', 'IRZ=': '_rx_down', 'D=': '_time_delay',
+                            'IX=': '_unknown_forward', 'IY=': '_unknown_starboard', 'IZ=': '_unknown_down',
                             'G=': '_datum', 'T=': '_time_stamp', 'C=': '_motion_compensation', 'F=': '_data_format',
                             'Q=': '_quality_check', 'I=': '_input_source', 'U=': '_active_passive',
                             'M=': 'motion_reference', 'A=': '_1pps'}
@@ -4187,6 +4219,12 @@ class kmall():
         translated = {}
         translate = translate_install
         for rec in records_flatten:
+
+            # Catch an corner case there the TX serial number contain a semicolon 
+            # and get split above
+            if rec[0].startswith('TX'):
+                rec = [';'.join(rec)]
+
             # subgroups are parsed here, first rec contains the prefix
             # ex: ['ATTI_1:X=0.000', 'Y=0.000', 'Z=0.000', 'R=0.000', 'P=0.000', 'H=0.000', 'D=0.000'...
             if len(rec) > 1:

@@ -41,6 +41,7 @@ Thumbs.db
 ###########################
 build/*
 .vscode/*
+kmall.egg-info
 
 # Backup files #
 ################
@@ -54,4 +55,8 @@ build/*
 # Jupyter notebook cruft.
 #########################
 *.ipynb_checkpoints/*
+
+# Distribution / packaging
+##########################
+*.egg-info/
 
