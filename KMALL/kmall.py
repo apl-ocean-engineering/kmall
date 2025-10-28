@@ -3595,7 +3595,7 @@ class kmall():
         # MRZOffsets = self.msgoffset[list(M)]
 
         # Get the file byte count offset for each MRZ datagram.
-        MRZOffsets = [x for x, y in zip(self.msgoffset, self.msgtype) if y == "b'#MRZ'"]
+        MRZOffsets = [x for x, y in zip(self.msgoffset, self.msgtype) if y == '#MRZ']
         self.pingcnt = []
         self.rxFans = []
         self.rxFanIndex = []
